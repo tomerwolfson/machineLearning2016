@@ -1,0 +1,9 @@
+function [file_paths] = get_files_list(dir_path)
+%%%
+% input: directory that contains review files
+% ouput: list of the files in the directory
+%%%
+    file_paths = [] 
+    directory = dir(dir_path) %matlab directory object
+    isDir = [directory.isdir] %check if pth belongs to directory
+    
