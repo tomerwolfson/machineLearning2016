@@ -1,4 +1,4 @@
-clc; %clear command window
+%%%clc; %clear command window
 
 positive_reviews = get_files_list('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\pos\');
 negative_reviews = get_files_list('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\neg\');
@@ -30,13 +30,15 @@ for i = 1:num_reviews
     %%%celldisp(review_array{i})
 end
 
+sprintf(size(review_array, 1))%%%%%%%%%%%%%%
+sprintf(size(review_array, 2))%%%%%%%%%%%%%%
 
 % Convert the textual review into a feature vector.
 % We select a specific 'bag of words' as the features.
 % These features will be the coordinates in the vector representation of
 % the review
-num_features = 42; %need to decide how many features!!
-vectors = vectorize_reviews(review_array, num_features);
+min_terms = 142; %%%need to decide minimum num of terms for a feature!!
+vectors = vectorize_reviews(review_array, min_terms);
 
 % Perform 10 fold cross validation with SVM on the vectors
 % use LibSVM implementation

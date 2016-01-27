@@ -1,8 +1,8 @@
-function [review_vectors, chosen_features] = vectorize_review(review_array, num_terms)
+function [review_vectors, chosen_features] = vectorize_review(review_array, num_appear)
 %%%
 % input:
 %   review_array - cell array that contains all the review strings
-%   num_terms - the min number of terms of a unigram/bigram in the dataset
+%   num_appear - the min number of appearances of a unigram/bigram in the dataset
 %                in order to be selected as a feature
 % output:
 %   review_vectors - cell array that contains the reviews vectorized form
@@ -10,7 +10,7 @@ function [review_vectors, chosen_features] = vectorize_review(review_array, num_
 %
 % the function receives the strings of all the reviews.
 % first, the features of the dataset are extracted. we include the unigrams
-% and bigrams that appear more than num_terms times in the review dataset as our features.
+% and bigrams that appear more than num_appear times in the review dataset as our features.
 % after extracting the features, each review is given its vector
 % representaion, according to the selected features.
 %%%
@@ -33,8 +33,7 @@ for i = 1:size(review_array, 2)
     words = strsplit(review, ' ');
     num_words = size(arr, 2);
     
-    % go over the words of the review, ordered according to 
-    % appearance order
+    % go over the words of the review, ordered according to appearance
     prev_word = ''; %for bigram insertion
     for j = 1:num_words
         word = words(j);
@@ -73,7 +72,7 @@ chosen_features = containers.Map();
 % extract unigram features
 unigram_keyset = keys(unigram_map);
 for j = 1:size(unigram_keyset, 2)
-    if( unigram_map(unigram_keyset{j}) > num_terms)
+    if( unigram_map(unigram_keyset{j}) > num_appear)
         chosen_features(unigram_keyset{j}) = 1;
     end
 end
@@ -81,7 +80,7 @@ end
 % extract bigram features
 bigram_keyset = keys(bigram_map);
 for j = 1:size(bigram_keyset, 2)
-    if( bigram_map(bigram_keyset{j}) > num_terms)
+    if( bigram_map(bigram_keyset{j}) > num_appear)
         chosen_features(bigram_keyset{j}) = 1;
     end
 end
@@ -99,19 +98,9 @@ for i = 1:size(review_array, 2)
    review = parse_review_string(review);
    
    review_words = strsplit(review, ' ');
-   stemmed_words = [];
-   for j = 1:length(t)
-       word = review_words(i);
-       word = porterStemmer(cell2mat(word));
-       % add stemmed word
-       stemmed_words = [stemmed_words, ' ', word];
-   end
-   
-   % return the vector form of the review
-   review_vectors(i, :) = feature_stats(stemmed_words, feature_grams);
+   for j = 1:size()
 end
 
-chosen_features = keys(chosen_features);
 
 end
 
