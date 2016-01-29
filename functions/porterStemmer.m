@@ -1,383 +1,411 @@
-function stem = porterStemmer(inString)
-% Applies the Porter Stemming algorithm as presented in the following
-% paper:
-% Porter, 1980, An algorithm for suffix stripping, Program, Vol. 14,
-%   no. 3, pp 130-137
-
-% Original code modeled after the C version provided at:
-% http://tartarus.org/martin/PorterStemmer/matlab.txt
-
-% The main part of the stemming algorithm starts here. b is an array of
-% characters, holding the word to be stemmed. The letters are in b[k0],
-% b[k0+1] ending at b[k]. In fact k0 = 1 in this demo program (since
-% matlab begins indexing by 1 instead of 0). k is readjusted downwards as
-% the stemming progresses. Zero termination is not in fact used in the
-% algorithm.
-
-% Note that only lower case sequences are stemmed. Forcing to lower case
-% should be done before porterStemmer(...) is called.
-
-% To call this function, use the string to be stemmed as the input
-% argument.  This function returns the stemmed word as a string.
-
-global j;
-b = inString;
-k = length(b);
-k0 = 1;
-j = k;
-
-% With this if statement, strings of length 1 or 2 don't go through the
-% stemming process. Remove this conditional to match the published
-% algorithm.
-stem = b;
-if k > 2
-    % Output displays per step are commented out.
-    %disp(sprintf('Word to stem: %s', b));
-    x = step1ab(b, k, k0);
-    %disp(sprintf('Steps 1A and B yield: %s', x{1}));
-    x = step1c(x{1}, x{2}, k0);
-    %disp(sprintf('Step 1C yields: %s', x{1}));
-    x = step2(x{1}, x{2}, k0);
-    %disp(sprintf('Step 2 yields: %s', x{1}));
-    x = step3(x{1}, x{2}, k0);
-    %disp(sprintf('Step 3 yields: %s', x{1}));
-    x = step4(x{1}, x{2}, k0);
-    %disp(sprintf('Step 4 yields: %s', x{1}));
-    x = step5(x{1}, x{2}, k0);
-    %disp(sprintf('Step 5 yields: %s', x{1}));
-    stem = x{1};
-end
-
-% cons(j) is TRUE <=> b[j] is a consonant.
-function c = cons(i, b, k0)
-c = true;
-switch(b(i))
-    case {'a', 'e', 'i', 'o', 'u'}
-        c = false;
-    case 'y'
-        if i == k0
-            c = true;
-        else
-            c = ~cons(i - 1, b, k0);
-        end
-end
-
-% mseq() measures the number of consonant sequences between k0 and j.  If
-% c is a consonant sequence and v a vowel sequence, and <..> indicates
-% arbitrary presence,
-
-%      <c><v>       gives 0
-%      <c>vc<v>     gives 1
-%      <c>vcvc<v>   gives 2
-%      <c>vcvcvc<v> gives 3
-%      ....
-function n = measure(b, k0)
-global j;
-n = 0;
-i = k0;
-while true
-    if i > j
-        return
-    end
-    if ~cons(i, b, k0)
-        break;
-    end
-    i = i + 1;
-end
-i = i + 1;
-while true
-    while true
-        if i > j
+function w = porterStemmer2(w)
+   %
+   % BSD license. Daniel Jablonski jablodan@gmail.com Based on work done and
+   % shared on http://tartarus.org/~martin/PorterStemmer/
+   %
+   % This is implementation of Porter 2 as presented here
+   % http://snowball.tartarus.org/algorithms/english/stemmer.html
+   % No exceptions are impemented.
+   %
+   % This matlab implementation is based on great previous one done by Juan
+   % Carlos Lopez http://tartarus.org/~martin/PorterStemmer/matlab.txt it
+   % is slightly faster (13-33%) when using test words here
+   % http://snowball.tartarus.org/algorithms/english/diffs.txt and about
+   % 33% faster when used in real life text form a book with 124'370 words
+   % - mainly due to the fact that smaller words (less than 6 letters) are
+   % handled little bit more effectively, skipping some argument passing
+   % etc. This implementation does not use global variables. One can not
+   % compare these two implementation 1:1 because set of rules is
+   % different. These was measured with tic, toc and calling cellfun.
+   %
+   % I have also used frequency of bigrams presented here
+   % http://www.cs.cmu.edu/afs/cs.cmu.edu/project/listen/NLP/
+   % Parsers/Stanford/stanford-parser-2005-07-21/MCALL/tsurgeon/MCALL/
+   % WordNet/prolog/misc/PREFIXES/BAR120.pdf
+   % to reorder switch case conditions so that more freqent ones are
+   % checked first.
+   
+   l = length(w);
+   j=l;
+   eaiou='eaiou';
+   
+   if l<3, return, end
+   if (w(1)==''''), w(1)=''; l=l-1; end
+   if (e('''s''',3) || e('''s',2) || e('''',1)), l=j; w=w(1:l); end
+   step1a();
+   if (l<3), return, end
+   step1b();
+   step1c();
+   step2();
+   step3();
+   step4();
+   step5();
+   
+   function tf = c(b,x)
+      tf=true;
+      for q=1:5
+         if b==eaiou(q),tf=false;return,end
+      end
+      if b=='y'
+         if (x==1),tf=true;
+         else tf=v(w(x-1),x-1);
+         end
+      end
+   end
+   function tf = v(b,x)
+      tf=false;
+      for q=1:5
+         if eaiou(q)==b,tf=true;return,end
+      end
+      if b=='y'
+         if (x==1),tf=false;
+         else tf=c(w(x-1),x-1);
+         end
+      end
+   end
+   function n = m1()
+      n=0;
+      x=1;
+      while true
+         if (x > j), return,end
+         if v(w(x),x), break; end
+         x=x+1;
+      end
+      x=x+1;
+      while true
+         while true
+            if (x > j), return,end
+            if c(w(x),x), break; end
+            x=x+1;
+         end
+         n=n+1; %%
+         return
+      end
+   end
+   function n = m2()
+      n=0;
+      x=1;
+      while true
+         if (x > j), return,end
+         if v(w(x),x), break; end
+         x=x+1;
+      end
+      x=x+1;
+      while true
+         while true
+            if (x > j), return,end
+            if c(w(x),x), break; end
+            x=x+1;
+         end
+         x=x+1;
+         n=n+1;
+         if n==2, return, end
+         while true
+            if (x > j), return, end
+            if v(w(x),x), break; end
+            x=x+1;
+         end
+         x=x+1;
+      end
+   end
+   function tf = vis()
+      lastvowel=false;
+      for x=1:j
+         switch w(x)
+            case { 'e', 'a', 'i', 'o', 'u'} % eaiouy
+               tf=true;
+               return
+            case {'y'}
+               tf=lastvowel;
+            otherwise
+               tf=false;
+         end
+         if tf
             return
-        end
-        if cons(i, b, k0)
-            break;
-        end
-        i = i + 1;
-    end
-    i = i + 1;
-    n = n + 1;
-    while true
-        if i > j
+         end
+         lastvowel=~tf;
+      end
+      tf=false;
+   end
+   function tf = c2()
+      if (l<2)
+         tf=false;
+         return
+      end
+      if (w(l) ~= w(l-1))
+         tf=false;
+         return
+      end
+      tf=c(w(l),l);
+   end
+   function tf = cvc(x)
+      tf=false;
+      if ~((x < 3) || v(w(x),x) || c(w(x-1),x-1) || v(w(x-2),x-2))
+         if (w(x) == 'w' || w(x) == 'x' || w(x) == 'y')
+            tf=false;
             return
-        end
-        if ~cons(i, b, k0)
-            break;
-        end
-        i = i + 1;
-    end
-    i = i + 1;
-end
-
-
-% vowelinstem() is TRUE <=> k0,...j contains a vowel
-function vis = vowelinstem(b, k0)
-global j;
-for i = k0:j,
-    if ~cons(i, b, k0)
-        vis = true;
-        return
-    end
-end
-vis = false;
-
-%doublec(i) is TRUE <=> i,(i-1) contain a double consonant.
-function dc = doublec(i, b, k0)
-if i < k0+1
-    dc = false;
-    return
-end
-if b(i) ~= b(i-1)
-    dc = false;
-    return
-end
-dc = cons(i, b, k0);
-
-
-% cvc(j) is TRUE <=> j-2,j-1,j has the form consonant - vowel - consonant
-% and also if the second c is not w,x or y. this is used when trying to
-% restore an e at the end of a short word. e.g.
-%
-%      cav(e), lov(e), hop(e), crim(e), but
-%      snow, box, tray.
-
-function c1 = cvc(i, b, k0)
-if ((i < (k0+2)) || ~cons(i, b, k0) || cons(i-1, b, k0) || ~cons(i-2, b, k0))
-    c1 = false;
-else
-    if (b(i) == 'w' || b(i) == 'x' || b(i) == 'y')
-        c1 = false;
-        return
-    end
-    c1 = true;
-end
-
-% ends(s) is TRUE <=> k0,...k ends with the string s.
-function s = ends(str, b, k)
-global j;
-if (str(length(str)) ~= b(k))
-    s = false;
-    return
-end % tiny speed-up
-if (length(str) > k)
-    s = false;
-    return
-end
-if strcmp(b(k-length(str)+1:k), str)
-    s = true;
-    j = k - length(str);
-    return
-else
-    s = false;
-end
-
-% setto(s) sets (j+1),...k to the characters in the string s, readjusting
-% k accordingly.
-
-function so = setto(s, b, k)
-global j;
-for i = j+1:(j+length(s))
-    b(i) = s(i-j);
-end
-if k > j+length(s)
-    b((j+length(s)+1):k) = '';
-end
-k = length(b);
-so = {b, k};
-
-% rs(s) is used further down.
-% [Note: possible null/value for r if rs is called]
-function r = rs(str, b, k, k0)
-r = {b, k};
-if measure(b, k0) > 0
-    r = setto(str, b, k);
-end
-
-% step1ab() gets rid of plurals and -ed or -ing. e.g.
-
-%       caresses  ->  caress
-%       ponies    ->  poni
-%       ties      ->  ti
-%       caress    ->  caress
-%       cats      ->  cat
-
-%       feed      ->  feed
-%       agreed    ->  agree
-%       disabled  ->  disable
-
-%       matting   ->  mat
-%       mating    ->  mate
-%       meeting   ->  meet
-%       milling   ->  mill
-%       messing   ->  mess
-
-%       meetings  ->  meet
-
-function s1ab = step1ab(b, k, k0)
-global j;
-if b(k) == 's'
-    if ends('sses', b, k)
-        k = k-2;
-    elseif ends('ies', b, k)
-        retVal = setto('i', b, k);
-        b = retVal{1};
-        k = retVal{2};
-    elseif (b(k-1) ~= 's')
-        k = k-1;
-    end
-end
-if ends('eed', b, k)
-    if measure(b, k0) > 0;
-        k = k-1;
-    end
-elseif (ends('ed', b, k) || ends('ing', b, k)) && vowelinstem(b, k0)
-    k = j;
-    retVal = {b, k};
-    if ends('at', b, k)
-        retVal = setto('ate', b(k0:k), k);
-    elseif ends('bl', b, k)
-        retVal = setto('ble', b(k0:k), k);
-    elseif ends('iz', b, k)
-        retVal = setto('ize', b(k0:k), k);
-    elseif doublec(k, b, k0)
-        retVal = {b, k-1};
-        if b(retVal{2}) == 'l' || b(retVal{2}) == 's' || ...
-                b(retVal{2}) == 'z'
-            retVal = {retVal{1}, retVal{2}+1};
-        end
-    elseif measure(b, k0) == 1 && cvc(k, b, k0)
-        retVal = setto('e', b(k0:k), k);
-    end
-    k = retVal{2};
-    b = retVal{1}(k0:k);
-end
-j = k;
-s1ab = {b(k0:k), k};
-
-%  step1c() turns terminal y to i when there is another vowel in the stem.
-function s1c = step1c(b, k, k0)
-global j;
-if ends('y', b, k) && vowelinstem(b, k0)
-    b(k) = 'i';
-end
-j = k;
-s1c = {b, k};
-
-% step2() maps double suffices to single ones. so -ization ( = -ize plus
-% -ation) maps to -ize etc. note that the string before the suffix must give
-% m() > 0.
-function s2 = step2(b, k, k0)
-global j;
-s2 = {b, k};
-switch b(k-1)
-    case {'a'}
-        if ends('ational', b, k) s2 = rs('ate', b, k, k0);
-        elseif ends('tional', b, k) s2 = rs('tion', b, k, k0); end;
-    case {'c'}
-        if ends('enci', b, k) s2 = rs('ence', b, k, k0);
-        elseif ends('anci', b, k) s2 = rs('ance', b, k, k0); end;
-    case {'e'}
-        if ends('izer', b, k) s2 = rs('ize', b, k, k0); end;
-    case {'l'}
-        if ends('bli', b, k) s2 = rs('ble', b, k, k0);
-        elseif ends('alli', b, k) s2 = rs('al', b, k, k0);
-        elseif ends('entli', b, k) s2 = rs('ent', b, k, k0);
-        elseif ends('eli', b, k) s2 = rs('e', b, k, k0);
-        elseif ends('ousli', b, k) s2 = rs('ous', b, k, k0); end;
-    case {'o'}
-        if ends('ization', b, k) s2 = rs('ize', b, k, k0);
-        elseif ends('ation', b, k) s2 = rs('ate', b, k, k0);
-        elseif ends('ator', b, k) s2 = rs('ate', b, k, k0); end;
-    case {'s'}
-        if ends('alism', b, k) s2 = rs('al', b, k, k0);
-        elseif ends('iveness', b, k) s2 = rs('ive', b, k, k0);
-        elseif ends('fulness', b, k) s2 = rs('ful', b, k, k0);
-        elseif ends('ousness', b, k) s2 = rs('ous', b, k, k0); end;
-    case {'t'}
-        if ends('aliti', b, k) s2 = rs('al', b, k, k0);
-        elseif ends('iviti', b, k) s2 = rs('ive', b, k, k0);
-        elseif ends('biliti', b, k) s2 = rs('ble', b, k, k0); end;
-    case {'g'}
-        if ends('logi', b, k) s2 = rs('log', b, k, k0); end;
-end
-j = s2{2};
-
-% step3() deals with -ic-, -full, -ness etc. similar strategy to step2.
-function s3 = step3(b, k, k0)
-global j;
-s3 = {b, k};
-switch b(k)
-    case {'e'}
-        if ends('icate', b, k) s3 = rs('ic', b, k, k0);
-        elseif ends('ative', b, k) s3 = rs('', b, k, k0);
-        elseif ends('alize', b, k) s3 = rs('al', b, k, k0); end;
-    case {'i'}
-        if ends('iciti', b, k) s3 = rs('ic', b, k, k0); end;
-    case {'l'}
-        if ends('ical', b, k) s3 = rs('ic', b, k, k0);
-        elseif ends('ful', b, k) s3 = rs('', b, k, k0); end;
-    case {'s'}
-        if ends('ness', b, k) s3 = rs('', b, k, k0); end;
-end
-j = s3{2};
-
-% step4() takes off -ant, -ence etc., in context <c>vcvc<v>.
-function s4 = step4(b, k, k0)
-global j;
-switch b(k-1)
-    case {'a'}
-        if ends('al', b, k) end;
-    case {'c'}
-        if ends('ance', b, k)
-        elseif ends('ence', b, k) end;
-    case {'e'}
-        if ends('er', b, k) end;
-    case {'i'}
-        if ends('ic', b, k) end;
-    case {'l'}
-        if ends('able', b, k)
-        elseif ends('ible', b, k) end;
-    case {'n'}
-        if ends('ant', b, k)
-        elseif ends('ement', b, k)
-        elseif ends('ment', b, k)
-        elseif ends('ent', b, k) end;
-    case {'o'}
-        if ends('ion', b, k)
-            if j == 0
-            elseif ~(strcmp(b(j),'s') || strcmp(b(j),'t'))
-                j = k;
+         end
+         tf=true;
+      elseif ~((x~=2) || c(w(1),1) || v(w(2),2))
+         tf=true;
+         return
+      elseif x==1
+         tf=true;
+         return
+      end
+   end
+   function tf = e(str, sl)
+      tf=false;
+      if ((str(sl) ~= w(l)) || (sl >= l)), return, end
+      if strcmp(w(l-sl+1:l-1), str(1:sl-1))
+         j=l-sl;
+         tf=true;
+         return
+      end
+   end
+   function tf = elc(str, sl)
+      tf=false;
+      if (sl >= l), return, end
+      if strcmp(w(l-sl+1:l-2), str(1:sl-2))
+         j=l-sl;
+         tf=true;
+         return
+      end
+   end
+   function setto(s,sl)
+      l=j+sl;
+      w(j+1:l)=s;
+      w((l+1):end)='';
+   end
+   function rs(str, sl)
+      if (m1() > 0), setto(str,sl); end
+   end
+   function step1a()
+      if (e('us',2) || e('ss',2)), return,
+      elseif e('sses',4), l=l-2;
+      elseif (e('ies',3) || e('ied',3))
+         if l==4, l=l-1;
+         else l=l-2;
+         end
+      elseif w(l)=='s',
+         for x=1:l-2
+            if v(w(x),x), l=l-1; break, end
+         end
+      end
+      w=w(1:l);
+   end
+   function step1b()
+      if (e('eed',3) || e('eedly',5))
+         rs('ee',2);
+      elseif ((e('ed',2)||e('ing',3)||e('edly',4)||e('ingly',5)) && vis())
+         l=j;
+         w=w(1:l);
+         if e('at', 2)
+            setto('ate', 3);
+         elseif e('bl', 2)
+            setto('ble', 3);
+         elseif e('iz', 2)
+            setto('ize', 3);
+         elseif c2()
+            l=l-1;
+            if ((w(l) == 'l') || (w(l) == 's') || (w(l) == 'z'))
+               l=l+1;
             end
-        elseif ends('ou', b, k) end;
-    case {'s'}
-        if ends('ism', b, k) end;
-    case {'t'}
-        if ends('ate', b, k)
-        elseif ends('iti', b, k) end;
-    case {'u'}
-        if ends('ous', b, k) end;
-    case {'v'}
-        if ends('ive', b, k) end;
-    case {'z'}
-        if ends('ize', b, k) end;
+            w=w(1:l);
+         elseif (m2()==1 && cvc(l))||(l==1)
+            setto('e',1);
+         end
+      end
+   end
+   function step1c()
+      if (e('y',1) && c(w(l-1),l-1) && (l~=2))
+         w(l)='i';
+      end
+   end
+   function step2()
+      % er 13.9
+      % on 13.6
+      % or 13.4
+      % ti 13.2
+      % al 13.1
+      % li 12.7
+      % ss 12.2
+      % ci 11.7
+      % gi 11.0
+      % sm 10.1
+      if (l<4), return, end
+      
+      switch w(l-1:l)
+         case {'er'}
+            if elc('izer',4), rs('ize',  3); end
+         case {'on'}
+            if elc('ization',  7), rs('ize',  3);
+            elseif elc('ation',    5), rs('ate',  3);
+            end
+         case {'or'}
+            if e('ator',     4), rs('ate',  3); end
+         case {'ti'}
+            if e('biliti',   6), rs('ble',  3);
+            elseif e('aliti',    5), rs('al',   2);
+            elseif e('iviti',    5), rs('ive',  3);
+            end
+         case {'al'}
+            if e('ational',  7), rs('ate',  3);
+            elseif e('tional',   6), rs('tion', 4);
+            end
+         case {'li'}
+            if e('abli',      4), rs('able',  4);
+            elseif e('bli',      3), rs('ble',  3);
+            elseif e('alli',     4), rs('al',   2);
+            elseif e('entli',    5), rs('ent',  3);
+            elseif e('fulli',    5), rs('ful',  3);
+            elseif e('lessli',   6), rs('less', 4);
+            elseif e('eli',      3), rs('e',    1);
+            elseif e('ousli',    5), rs('ous',  3);
+            else j=l-2; % if e('li',       2),
+               if (...
+                     w(j)=='e'||w(j)=='c'||w(j)=='r'||w(j)=='t'||...
+                     w(j)=='n'||w(j)=='g'||w(j)=='d'||w(j)=='k'||...
+                     w(j)=='h'||w(j)=='m')
+                  % el 12.4
+                  % cl 11.4
+                  % rl 10.8
+                  % tl 10.7
+                  % nl 10.1
+                  % gl 9.99
+                  % dl 9.76
+                  % kl 9.22
+                  % hl 9.00
+                  % ml 7.21
+                  % by http://www.cs.cmu.edu/afs/cs.cmu.edu/project/listen/NLP/Parsers/Stanford/stanford-parser-2005-07-21/MCALL/tsurgeon/MCALL/WordNet/prolog/misc/PREFIXES/BAR120.pdf
+                  rs('',0);
+               end
+            end
+         case {'ss'}
+            if e('iveness',  7), rs('ive',  3);
+            elseif e('fulness',  7), rs('ful',  3);
+            elseif e('ousness',  7), rs('ous',  3);
+            end
+         case {'ci'}
+            if e('enci',     4), rs('ence', 4);
+            elseif e('anci',     4), rs('ance', 4);
+            end
+         case {'gi'}
+            if (e('ogi',3)&&(w(j)=='l')), rs('og',  2); end
+         case {'sm'}
+            if e('alism',    5), rs('al',   2);end
+      end
+      j=l;
+   end
+   function step3()
+      % er 13.9
+      % on 13.6
+      % or 13.4
+      % te 13.3
+      % ti 13.2
+      % al 13.1
+      % ve 12.9
+      % li 12.7
+      % ss 12.2
+      % ul 11.9
+      % ci 11.7
+      % gi 11.0
+      % sm 10.1
+      % ze 10.1
+      if (l<4), return, end
+      switch w(l-1:l)
+         case {'te'}
+            if elc('icate',     5), rs('ic',  2); end
+         case {'ti'}
+            if elc('iciti',     5), rs('ic',  2); end
+         case {'al'}
+            if elc('ational',   7), rs('ate', 3);
+            elseif elc('tional',    6), rs('tion',  4);
+            elseif elc('ical',      4), rs('ic',   2);
+            end
+         case {'ve'}
+            if (elc('ative',     5)&&(m2>1)), rs('',    0); end
+         case {'ss'}
+            if (elc('ness',4)||e('ful',3)), rs('',    0); end;
+         case {'ul'}
+            if elc('ful',       3), rs('',     0); end
+         case {'ze'}
+            if elc('alize',     5), rs('al',  2); end
+      end
+      j=l;
+   end
+   function step4()
+      %       er 13.9
+      %       on 13.6
+      %       te 13.3
+      %       ti 13.2
+      %       al 13.1
+      %       nt 13.1
+      %       le 12.9
+      %       ve 12.9
+      %       ic 12.8
+      %       ce 12.7
+      %       us 12.3
+      %       sm 10.1
+      %       ze 10.1
+      if (l<6), return, end 
+      % to have m2>1 you need at least 4 letters and min 2 of suffix
+      switch w(l-1:l)
+         case {'er'}
+            j=l-2;
+         case {'on'}
+            if elc('ion',       3)
+               if (j == 0)
+               elseif ~(w(j)=='s' || w(j)=='t')
+                  j=l;
+               end
+            end;
+         case {'te'}
+            elc('ate',      3);
+         case {'ti'}
+            elc('iti',      3);
+         case {'al'}
+            j=l-2;
+         case {'nt'}
+            if     elc('ant',       3)
+            elseif elc('ement',     5)
+            elseif elc('ment',      4)
+            elseif elc('ent',       3)
+            end;
+         case {'le'}
+            if     elc('able',      4)
+            elseif elc('ible',      4)
+            end;
+         case {'ve'}
+            elc('ive',      3);
+         case {'ic'}
+            j=l-2;
+         case {'ce'}
+            if     elc('ance',      4)
+            elseif elc('ence',      4)
+            end;
+         case {'us'}
+            elc('ous',      3);
+         case {'sm'}
+            elc('ism',      3);
+         case {'ze'}
+            elc('ize',      3);
+      end
+      if (m2() > 1)
+         w=w(1:j);
+         l=j;
+      end
+   end
+   function step5()
+      j=l;
+      if (w(l) == 'e')
+         a=m2;
+         if ((a > 1) || ((a == 1) && ~cvc(l-1)))
+            l=l-1;
+         end
+      elseif ((w(l) == 'l') && c2() && (m2()>1))
+         l=l-1;
+      end
+      w =w(1:l);
+   end
 end
-if measure(b, k0) > 1
-    s4 = {b(k0:j), j};
-else
-    s4 = {b(k0:k), k};
-end
-
-% step5() removes a final -e if m() > 1, and changes -ll to -l if m() > 1.
-function s5 = step5(b, k, k0)
-global j;
-j = k;
-if b(k) == 'e'
-    a = measure(b, k0);
-    if (a > 1) || ((a == 1) && ~cvc(k-1, b, k0))
-        k = k-1;
-    end
-end
-if (b(k) == 'l') && doublec(k, b, k0) && (measure(b, k0) > 1)
-    k = k-1;
-end
-s5 = {b(k0:k), k};

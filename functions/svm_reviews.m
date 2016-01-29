@@ -1,4 +1,5 @@
 function svm_reviews(reviews_vectors, labels)
+addpath('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\libsvm-3.20\matlab');
 
 vec_size=size(reviews_vectors);
 vec_count=vec_size(1);
@@ -32,23 +33,36 @@ num_points=floor(vec_count./10) * 10;%25,000
 test_size=floor(vec_count/10);%2,500
 train_size=num_points-test_size;%25,000-2,500=22,500
 
-c = power(10,2);% C = {10^0, 10^1,..., 10^5}
-d=1;
-cross_error = 0; %init errors for current C
-set_index = 1; %index of current test set
-for i = 1:10;
-    set_index = (test_size*(i-1)) + 1; %move index to beginning of next subset
-    %create test matrix:
-    test_mat = reviews_vectors(set_index:set_index+test_size-1,:);
-    test_labels = labels(set_index:set_index+test_size-1,:);
-    %create train matrix:
-    train_mat = vertcat(reviews_vectors(1:set_index-1, :), reviews_vectors(set_index+test_size:num_points,:) );
-    train_labels = vertcat(labels(1:set_index-1, :), labels(set_index+test_size:num_points,:) );
-    %svm error:
-    cross_error = cross_error + svmKernels(d,c,train_mat,train_labels,test_mat,test_labels);
+end_C = 15;%%%
+for d = 1:6
+    for count = -7:7
+        c = power(2,count);% optimal according to tests
+        cross_error = 0; %init errors for current C
+        set_index = 1; %index of current test set
+        for i = 1:10;
+            set_index = (test_size*(i-1)) + 1; %move index to beginning of next subset
+            %create test matrix:
+            test_mat = reviews_vectors(set_index:set_index+test_size-1,:);
+            test_labels = labels(set_index:set_index+test_size-1,:);
+            %create train matrix:
+            train_mat = vertcat(reviews_vectors(1:set_index-1, :), reviews_vectors(set_index+test_size:num_points,:) );
+            train_labels = vertcat(labels(1:set_index-1, :), labels(set_index+test_size:num_points,:) );
+            %svm error:
+            cross_error = cross_error + svmKernels(d,c,train_mat,train_labels,test_mat,test_labels);
+        end
+        
+        final_cross_error = cross_error/10; %set average errors for 10 training sets
+        final_accuracy = 1 - final_cross_error;
+        final_accu(count+8) = final_accuracy;
+    end
+    
+    %plot graph for all the d's
+    subplot(3,2,d)
+    plot((-7:7), final_accu(1:end_C));
+    title(['SVM: d=',num2str(d)]);
+    xlabel('log2(C)');
+    ylabel('accuracies');
 end
-
-final_cross_error=cross_error/10 %set average errors for 10 training sets
 
     function [MSE] = svmKernels(d,c,train_mat,train_labels,test_mat,test_labels)%create the svm classifier and label the test
         %create classifier:

@@ -1,7 +1,9 @@
 %%%clc; %clear command window
 
-positive_reviews = get_files_list('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test\neg\');
-negative_reviews = get_files_list('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test\pos\');
+tic; %%% Start measuring program time
+
+positive_reviews = get_files_list('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\neg\');
+negative_reviews = get_files_list('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\pos\');
 
 %initialize reviews labels
 neg_size = size(negative_reviews,2);
@@ -38,10 +40,11 @@ end
 % We select a specific 'bag of words' as the features.
 % These features will be the coordinates in the vector representation of
 % the review
-min_terms = 100; %%%need to decide minimum num of terms for a feature!!
+min_terms = 0.01*size(review_array, 2); %term thrshold for features, [based on Pang, Lee paper 2001]
 [vectors,features] = vectorize_review(review_array, min_terms);
 features
 % Perform 10 fold cross validation with SVM on the vectors
 % use LibSVM implementation
 svm_reviews(vectors,labels);
+toc %%% Measuring program time in seconds
 

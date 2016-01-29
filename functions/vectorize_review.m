@@ -33,12 +33,18 @@ for i = 1:size(review_array, 2)
     words = strsplit(review, ' ');
     num_words = size(words, 2);
     
+    %i%%%%%%%%%%%%%%for test
+    %words%%%%%%%%%%%%for test
+    
     % go over the words of the review, ordered according to
     % appearance order
     prev_word = ''; %for bigram insertion
     for j = 1:num_words
         word = words(j);
         weight=1;
+        
+        %word%%%%%%%%%%%%for test
+        
         %stem the word - Porter Stemming Algorithm
         word = porterStemmer(cell2mat(word));
         
