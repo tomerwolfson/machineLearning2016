@@ -33,40 +33,39 @@ num_points=floor(vec_count./10) * 10;%25,000
 test_size=floor(vec_count/10);%2,500
 train_size=num_points-test_size;%25,000-2,500=22,500
 
-end_C = 15;%%%
-for d = 1:6
-    for count = -7:7
-        c = power(2,count);% optimal according to tests
-        cross_error = 0; %init errors for current C
-        set_index = 1; %index of current test set
-        for i = 1:10;
-            set_index = (test_size*(i-1)) + 1; %move index to beginning of next subset
-            %create test matrix:
-            test_mat = reviews_vectors(set_index:set_index+test_size-1,:);
-            test_labels = labels(set_index:set_index+test_size-1,:);
-            %create train matrix:
-            train_mat = vertcat(reviews_vectors(1:set_index-1, :), reviews_vectors(set_index+test_size:num_points,:) );
-            train_labels = vertcat(labels(1:set_index-1, :), labels(set_index+test_size:num_points,:) );
-            %svm error:
-            cross_error = cross_error + svmKernels(d,c,train_mat,train_labels,test_mat,test_labels);
-        end
-        
-        final_cross_error = cross_error/10; %set average errors for 10 training sets
-        final_accuracy = 1 - final_cross_error;
-        final_accu(count+8) = final_accuracy;
+end_C = 4;%%%
+d = 3;
+for count = 1:end_C
+    c = power(10,count);% optimal according to tests
+    cross_error = 0; %init errors for current C
+    set_index = 1; %index of current test set
+    for i = 1:10;
+        set_index = (test_size*(i-1)) + 1; %move index to beginning of next subset
+        %create test matrix:
+        test_mat = reviews_vectors(set_index:set_index+test_size-1,:);
+        test_labels = labels(set_index:set_index+test_size-1,:);
+        %create train matrix:
+        train_mat = vertcat(reviews_vectors(1:set_index-1, :), reviews_vectors(set_index+test_size:num_points,:) );
+        train_labels = vertcat(labels(1:set_index-1, :), labels(set_index+test_size:num_points,:) );
+        %svm error:
+        cross_error = cross_error + svmKernels(d,c,train_mat,train_labels,test_mat,test_labels);
     end
     
-    %plot graph for all the d's
-    subplot(3,2,d)
-    plot((-7:7), final_accu(1:end_C));
-    title(['SVM: d=',num2str(d)]);
-    xlabel('log2(C)');
-    ylabel('accuracies');
+    final_cross_error = cross_error/10; %set average errors for 10 training sets
+    final_accuracy = 1 - final_cross_error;
+    final_accu(count) = final_accuracy;
 end
+
+%plot graph for all the d's
+plot((1:end_C), final_accu(1:end_C));
+title(['SVM: 200 reviews polynomial kernel degree: %d',num2str(d)]);
+xlabel('log10(C)');
+ylabel('accuracies');
 
     function [MSE] = svmKernels(d,c,train_mat,train_labels,test_mat,test_labels)%create the svm classifier and label the test
         %create classifier:
         param = sprintf('-t %d -d %d -c %d -q',1,d,c);
+       %%% param = sprintf('-t %d -c %d -g %d -q',2,c,0.0078125);%%%%%%RBF kernel
         SVMSModel = svmtrain(train_labels,train_mat,param);
         %classify test:
         [Group, accuracy, ~] = svmpredict(test_labels,test_mat,SVMSModel); %predict without display '-q'
