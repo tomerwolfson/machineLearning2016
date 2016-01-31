@@ -4,8 +4,8 @@ close all;
 tic;
 
 
-negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\neg\');
-posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\pos\');
+negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\neg\');
+posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\pos\');
 labels = [zeros(size(negfiles,1),1); ones(size(posfiles,1),1)];
 
 allfiles = [negfiles;posfiles];
@@ -33,12 +33,13 @@ review_array = review_array';
 % These features will be the coordinates in the vector representation of
 % the review
 
-features_threshold = 7;
+features_threshold = 70;
 [featureVector headers] = featurize_bigram(review_array, features_threshold, 1, 1);%%%%%%
 %%%[featureVector chosen_features]= featurize_bigram(review_array, features_threshold, 0, 0);
 %chosen_features %%%%%%%
 featureVectorOrig = featureVector;
-save('featureVectorn70.dump','featureVector')
+save('featureVectorn70.dump','featureVector') %save vectors matrix
+save('headersn70.dump','headers') %save chosen headers
 
 
 % Perform 10 fold cross validation with SVM on the vectors
