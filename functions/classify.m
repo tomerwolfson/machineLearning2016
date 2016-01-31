@@ -33,13 +33,49 @@ review_array = review_array';
 % These features will be the coordinates in the vector representation of
 % the review
 
-features_threshold = 70;
-[featureVector headers] = featurize_bigram(review_array, features_threshold, 1, 1);%%%%%%
-%%%[featureVector chosen_features]= featurize_bigram(review_array, features_threshold, 0, 0);
+features_threshold = 500;
+featureVector = featurize_bigram(review_array, features_threshold, 1, 1);%%%%%%
+%%%featureVector= featurize_bigram(review_array, features_threshold, 0, 0);
 %chosen_features %%%%%%%
 featureVectorOrig = featureVector;
 save('featureVectorn70.dump','featureVector') %save vectors matrix
 save('headersn70.dump','headers') %save chosen headers
+
+
+% Perform 10 fold cross validation with Naive Bayes on the vectors
+% using Matlab implementation
+disp('Naive Bayes - Multinomial');
+Fresults = [];
+
+dataset_size = size(review_array, 1);
+test_size = floor(dataset_size/10);
+dataset_size = test_size * 10; %round down dataset size
+
+for i = 1:10
+    randomindices = randperm(dataset_size);
+    randomindices = randomindices(1:(dataset_size-test_size));
+    otherindices = (1:dataset_size)';
+    testsetindex = setdiff(otherindices,randomindices)';
+    trainingsetindex = randomindices ;
+    trainingset = featureVector(trainingsetindex,:);
+    traininglabel = labels(trainingsetindex,:);
+    
+    testset = featureVector(testsetindex,:);
+    testlabel = labels(testsetindex,:);
+    O1 = NaiveBayes.fit(trainingset,traininglabel,'dist','mn'); % or  'mvmn'
+    C2 = O1.predict(testset);
+    error = sum(xor(C2, testlabel));
+    accuracy = 1 - error/test_size;
+    %%%%cMat2 = confusionmat(testlabel,C2);
+    %%%%%%Fresults = [Fresults,F1measureConfusionMatrix(cMat2)];
+    Fresults = [Fresults,accuracy];
+end
+%disp(n);
+fprintf('Accuracy for Naive Bayes classifier = %0.5f\n', mean(Fresults))
+%size(featureVector)%%%%%%%%%%%
+%labels%%%%%%%%
+%featureVector%%%%%%%%%%%%%%
+%size(featureVector)%%%%%%%%%%%%%
 
 
 % Perform 10 fold cross validation with SVM on the vectors
@@ -80,43 +116,8 @@ fprintf('Accuracy for libSVM classifier = %0.5f\n', mean(Fresults))
 %labels%%%%%%%%
 %featureVector%%%%%%%%%%%%%%
 %size(featureVector)%%%%%%%%%%%%%
-toc;
 
 
-% Perform 10 fold cross validation with Naive Bayes on the vectors
-% using Matlab implementation
-disp('Naive Bayes - Multinomial');
-Fresults = [];
-
-dataset_size = size(review_array, 1);
-test_size = floor(dataset_size/10);
-dataset_size = test_size * 10; %round down dataset size
-
-for i = 1:10
-    randomindices = randperm(dataset_size);
-    randomindices = randomindices(1:(dataset_size-test_size));
-    otherindices = (1:dataset_size)';
-    testsetindex = setdiff(otherindices,randomindices)';
-    trainingsetindex = randomindices ;
-    trainingset = featureVector(trainingsetindex,:);
-    traininglabel = labels(trainingsetindex,:);
-    
-    testset = featureVector(testsetindex,:);
-    testlabel = labels(testsetindex,:);
-    O1 = NaiveBayes.fit(trainingset,traininglabel,'dist','mn'); % or  'mvmn'
-    C2 = O1.predict(testset);
-    error = sum(xor(C2, testlabel));
-    accuracy = 1 - error/test_size;
-    %%%%cMat2 = confusionmat(testlabel,C2);
-    %%%%%%Fresults = [Fresults,F1measureConfusionMatrix(cMat2)];
-    Fresults = [Fresults,accuracy];
-end
-%disp(n);
-fprintf('Accuracy for Naive Bayes classifier = %0.5f\n', mean(Fresults))
-%size(featureVector)%%%%%%%%%%%
-%labels%%%%%%%%
-%featureVector%%%%%%%%%%%%%%
-%size(featureVector)%%%%%%%%%%%%%
 toc;
 
 
