@@ -3,19 +3,37 @@ clear all;
 close all;
 tic;
 
-
-negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\neg\');
-posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\pos\');
+%negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\neg\');
+%posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\pos\');
+negfiles = getAllFiles('test200\neg\');
+posfiles = getAllFiles('test200\pos\');
 labels = [zeros(size(negfiles,1),1); ones(size(posfiles,1),1)];
 
 allfiles = [negfiles;posfiles];
 review_array ={};
+review_score ={};
 
 % go over all the review files,
 % extract each review string and store it
 for i = 1:size(allfiles,1)
     disp(sprintf('Processing review %d out of %d', i, size(allfiles,1)));
     myfile = allfiles{i};
+    
+    score=strsplit(myfile,'\');%score of review
+    score=score(size(score,2));
+    score=score{1};
+    score=score(size(score,2)-4);
+    score=str2num(score);
+    if (score==4 || score==7)
+        score=1;
+    elseif (score==3 || score==8)
+        score=2;
+    elseif (score==2 || score==9)
+        score=3;
+    else
+        score=4;
+    end
+     
     fid = fopen( myfile);
     s = textscan(fid,'%s','Delimiter','\n');
     mystr = '';
@@ -24,23 +42,20 @@ for i = 1:size(allfiles,1)
     end
     fclose(fid);
     review_array{end+1} = mystr;
+    review_score{end+1}=score;
 end
 review_array = review_array';
-
+review_score = review_score';
 
 % Convert the textual review into a feature vector.
 % We select a specific 'bag of words' as the features.
 % These features will be the coordinates in the vector representation of
 % the review
 
-features_threshold = 500;
-featureVector = featurize_bigram(review_array, features_threshold, 1, 1);%%%%%%
-%%%featureVector= featurize_bigram(review_array, features_threshold, 0, 0);
-%chosen_features %%%%%%%
+
+featureVector = featurize_bigram(review_array, review_score, 1, 1);%%%%%%
 featureVectorOrig = featureVector;
 save('featureVectorn70.dump','featureVector') %save vectors matrix
-save('headersn70.dump','headers') %save chosen headers
-
 
 % Perform 10 fold cross validation with Naive Bayes on the vectors
 % using Matlab implementation
@@ -66,25 +81,33 @@ for i = 1:10
     C2 = O1.predict(testset);
     error = sum(xor(C2, testlabel));
     accuracy = 1 - error/test_size;
-    %%%%cMat2 = confusionmat(testlabel,C2);
-    %%%%%%Fresults = [Fresults,F1measureConfusionMatrix(cMat2)];
     Fresults = [Fresults,accuracy];
 end
-%disp(n);
 fprintf('Accuracy for Naive Bayes classifier = %0.5f\n', mean(Fresults))
-%size(featureVector)%%%%%%%%%%%
-%labels%%%%%%%%
-%featureVector%%%%%%%%%%%%%%
-%size(featureVector)%%%%%%%%%%%%%
 
+% Normalizing review vectors to range [0,1]
+vec_size=size(featureVector);
+vec_count=vec_size(1);
+vec_dim=vec_size(2);
+% get max and min
+maxVec = max(featureVector(:,:));
+minVec = min(featureVector(:,:));
+difVec=maxVec-minVec;
+for vec_num = 1:vec_count;%normalize reviews_vectors
+    v=featureVector(vec_num,:);
+    % normalize to [0,1]
+    v =((v-minVec)./difVec);
+    featureVector(vec_num,:)=v;
+end
 
 % Perform 10 fold cross validation with SVM on the vectors
 % using LibSVM implementation
-disp('SVM Bayes - Polynomial Kernel degree 3');
+disp('SVM - Polynomial Kernel');
 Fresults = [];
-degree = 3;
-c = 2^4;
-param = sprintf('-t %d -d %d -c %d -q',1,degree,c);
+d=1;
+c = power(2,5);
+
+param = sprintf('-t %d -d %d -c %d -q',1,d,c);
 
 dataset_size = size(review_array, 1);
 test_size = floor(dataset_size/10);
@@ -106,18 +129,11 @@ for i = 1:10
     %classify test:
     [Group, accuracy, ~] = svmpredict(testlabel,testset,SVMSModel); %predict without display '-q'
     accuracy = accuracy(1)/100;
-    %%%%cMat2 = confusionmat(testlabel,C2);
-    %%%%%%Fresults = [Fresults,F1measureConfusionMatrix(cMat2)];
     Fresults = [Fresults,accuracy];
 end
-%disp(n);
-fprintf('Accuracy for libSVM classifier = %0.5f\n', mean(Fresults))
-%size(featureVector)%%%%%%%%%%%
-%labels%%%%%%%%
-%featureVector%%%%%%%%%%%%%%
-%size(featureVector)%%%%%%%%%%%%%
+
+fprintf('Accuracy for SVM classifier = %0.5f\n', mean(Fresults))
 
 
 toc;
-
 

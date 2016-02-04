@@ -1,4 +1,4 @@
-function [featureVector,selectedheaderskeys] = featurize_bigram(inputcellarray, nminFeatures, removeStopWords, doStem)
+function [featureVector,selectedheaderskeys] = featurize_bigram(inputcellarray,review_score,removeStopWords, doStem)
 %
 %
 % featureVector = featurize_bigram(inputcellarray, nminFeatures, removeStopWords, doStem)
@@ -7,7 +7,7 @@ function [featureVector,selectedheaderskeys] = featurize_bigram(inputcellarray, 
 % outputs a feature vector with a number of features (nminFeatures is the
 % number of times that a feature should be presented in the corpus to be
 % included in the feature vector.)
-% 
+%
 % The approach is basically a bag-of-word but we also add bigrams to the
 % feature vector too
 %
@@ -32,20 +32,17 @@ function [featureVector,selectedheaderskeys] = featurize_bigram(inputcellarray, 
 
 
 %
-fid = fopen('english.stop');
-
-stopwords = textscan(fid, '%s');
-stopwords = stopwords{1,1};
-fclose(fid);
-
+stopwords=file_to_map('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\words_list\english.stop');
+neg_words=file_to_map('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\words_list\neg_list.txt');
+pos_words=file_to_map('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\words_list\pos_list.txt');
 
 % params
-% n:minimum appearances of a stem
-n=nminFeatures;
 
-word_map = containers.Map();
+bigram_map_bag = containers.Map();
+word_map_bag = containers.Map();
 bigram_map = containers.Map();
-prev_word = ''; %for bigram insertion
+word_map = containers.Map();
+total=zeros(1,4);%words_bag, words_no_bag, big_bag, big_no_bag
 
 for i = 1:size(inputcellarray,1)
     fprintf('Parsing %d/%d\n', i, size(inputcellarray,1));
@@ -54,11 +51,11 @@ for i = 1:size(inputcellarray,1)
     review = lower(review);
     % split the parse review to an array of words
     words=regexp(review,' ','split');
-    
+    prev_word = ''; %for bigram insertion
     % go over the words of the review, ordered according to
     % appearance order
     for j = 1:size(words,2)
-        
+        in_list=0;
         if (doStem)
             %stem the word - Porter Stemming Algorithm
             word = porterStemmer(cell2mat(words(j)));
@@ -68,46 +65,101 @@ for i = 1:size(inputcellarray,1)
         
         % if the function caller wants to remove stopwords
         if (removeStopWords)
-            not_stop_word = ~isStopWord(word, stopwords);
+            not_stop_word = ~isKey(stopwords,word);
         else
             not_stop_word = 1;
         end
         
-        % word exists in word-map
-        if ( isKey(word_map, word) && not_stop_word )
-            word_map(word) = word_map(word)+1;
-            % new word encountered
-        elseif (not_stop_word & (~strcmp(word,' ')) & (~strcmp(word,'')))
-            word_map(word) = 1;
+        if (isKey(neg_words, word) || isKey(pos_words, word))
+            %wight=floor(0.1*nminFeatures);
+            in_list=1;
         end
-        
-        % add current bigram
-        if  ( (~strcmp(prev_word,'')) & (~strcmp(word,' ')) & (~strcmp(prev_word,' ')) & (~strcmp(word,'')) )
-            %check word is not the first in review, and that words are not ' '
-            bigram = char(strcat(prev_word, {' '}, word));
-            % add bigram to map
-            if (isKey(word_map, bigram))
-                word_map(bigram) = word_map(bigram)+1;
+        % word exists in word-map
+        if (not_stop_word & (~strcmp(word,' ')) & (~strcmp(word,'')))
+            if (in_list)
+                total(1)=total(1)+1;
+                if (isKey(word_map_bag, word))
+                    word_map_bag(word) = word_map_bag(word)+ 1;
+                else
+                    word_map_bag(word) = 1;
+                end
             else
-                bigram_map(bigram) = 1;
-                word_map(bigram) = 1;
+                total(2)=total(2)+1;
+                if (isKey(word_map, word))
+                    word_map(word) = word_map(word)+ 1;
+                else
+                    word_map(word) = 1;
+                end
             end
         end
+        % add current bigram
+        if((~strcmp(prev_word,'')) & (~strcmp(word,' ')) & (~strcmp(prev_word,' ')) & (~strcmp(word,'')) )
+            if (isKey(stopwords,word) & isKey(stopwords,prev_word))%the bigram is all stopwords
+                prev_word = word;
+                continue;
+            end
+            %check word is not the first in review, and that words are not ' '
+            bigram = char(strcat(prev_word,{' '},word));
+            % add bigram to map
+            if(in_list)
+                total(3)=total(3)+1;
+                if (isKey(bigram_map_bag, bigram))
+                    bigram_map_bag(bigram)=bigram_map_bag(bigram)+1;
+                else
+                    bigram_map_bag(bigram)=1;
+                end
+            else
+                total(4)=total(4)+1;
+                if (isKey(bigram_map, bigram))
+                    bigram_map(bigram)=bigram_map(bigram)+1;
+                else
+                    bigram_map(bigram)=1;
+                end
+            end 
+        end
         prev_word = word;
-        
     end
 end
 
-selectedheaders = containers.Map();
-wordkeys = keys(word_map);
+selectedheaders=containers.Map();
 
-% extract features
+%words in word bag
+wordkeys = keys(word_map_bag);
 for i=1:size(wordkeys,2)
-    if (word_map(wordkeys{i})>=n)
+    app_prec=word_map_bag(wordkeys{i})/total(1);
+    if (app_prec>=0.001)
         selectedheaders(wordkeys{i})=1;
     end
 end
-headers = keys(selectedheaders);
+
+%words not in word bag
+wordkeys = keys(word_map);
+for i=1:size(wordkeys,2)
+    app_prec=word_map(wordkeys{i})/total(2);
+    if (app_prec>=0.1)
+        selectedheaders(wordkeys{i})=1;
+    end
+end
+
+%bigrams in word bag
+wordkeys = keys(bigram_map_bag);
+for i=1:size(wordkeys,2)
+    app_prec=bigram_map_bag(wordkeys{i})/total(3);
+    if (app_prec>=0.001)
+        selectedheaders(wordkeys{i})=1;
+    end
+end
+
+%bigrams not in word bag
+wordkeys = keys(bigram_map);
+for i=1:size(wordkeys,2)
+    app_prec=bigram_map(wordkeys{i})/total(4);
+    if (app_prec>=0.1)
+        selectedheaders(wordkeys{i})=1;
+    end
+end
+
+headers = keys(selectedheaders)
 
 % Iterate over all the reviews and create their vector represenataion,
 % the vector coordinates are the features unigrams and bigrams
@@ -131,13 +183,14 @@ for i = 1:size(inputcellarray,1)
         %stemmed_review
         review = [review,' ',word];
     end
-    outputMatrix(i,:) = term_count(review, headers);
+    score=review_score(i);
+    outputMatrix(i,:) = term_count(review,score{1},headers);
     
     if mod(i,300)==0
         a = sprintf('%d', i);
         disp(a)
     end
-      
+    
 end
 
 featureVector = outputMatrix;
