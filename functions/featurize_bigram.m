@@ -127,7 +127,7 @@ selectedheaders=containers.Map();
 wordkeys = keys(word_map_bag);
 for i=1:size(wordkeys,2)
     app_prec=word_map_bag(wordkeys{i})/total(1);
-    if (app_prec>=0.001)
+    if (app_prec>=0.0001)
         selectedheaders(wordkeys{i})=1;
     end
 end
@@ -136,7 +136,7 @@ end
 wordkeys = keys(word_map);
 for i=1:size(wordkeys,2)
     app_prec=word_map(wordkeys{i})/total(2);
-    if (app_prec>=0.1)
+    if (app_prec>=0.05)
         selectedheaders(wordkeys{i})=1;
     end
 end
@@ -145,7 +145,7 @@ end
 wordkeys = keys(bigram_map_bag);
 for i=1:size(wordkeys,2)
     app_prec=bigram_map_bag(wordkeys{i})/total(3);
-    if (app_prec>=0.001)
+    if (app_prec>=0.0001)
         selectedheaders(wordkeys{i})=1;
     end
 end
@@ -154,7 +154,7 @@ end
 wordkeys = keys(bigram_map);
 for i=1:size(wordkeys,2)
     app_prec=bigram_map(wordkeys{i})/total(4);
-    if (app_prec>=0.1)
+    if (app_prec>=0.05)
         selectedheaders(wordkeys{i})=1;
     end
 end
