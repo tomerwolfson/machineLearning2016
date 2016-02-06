@@ -6,8 +6,8 @@ tic;
 %############################################%
 %### Extract training data:               ###%
 %############################################%
-negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\neg\');
-posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\pos\');
+negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\neg\');
+posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\pos\');
 labels = [zeros(size(negfiles,1),1); ones(size(posfiles,1),1)];
 
 allfiles = [negfiles;posfiles];
@@ -77,8 +77,8 @@ featureVectorOrig = featureVector;
 %############################################%
 %### Extract test data:                   ###%
 %############################################%
-negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test200_other\neg\');
-posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test200_other\pos\');
+negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\dataset_cornell\neg\');
+posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\dataset_cornell\pos\');
 test_labels = [zeros(size(negfiles,1),1); ones(size(posfiles,1),1)];
 
 testfiles = [negfiles;posfiles];
@@ -199,7 +199,6 @@ SVMSModel = svmtrain(traininglabel,trainingset,param);
 %classify test:
 [Group, accuracy, ~] = svmpredict(testlabel,testset,SVMSModel); %predict without display '-q'
 accuracy_SVM = accuracy(1)/100
-
 
 %################################################################
 
