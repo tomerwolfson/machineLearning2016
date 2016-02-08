@@ -100,6 +100,7 @@ for vec_num = 1:vec_count;%normalize reviews_vectors
         if (difVec(j)~=0)
             v(j) =((v(j)-minVec(j))./difVec(j));
         end
+    end
     featureVector(vec_num,:)=v;
 end
 
