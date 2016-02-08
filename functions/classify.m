@@ -96,7 +96,10 @@ difVec=maxVec-minVec;
 for vec_num = 1:vec_count;%normalize reviews_vectors
     v=featureVector(vec_num,:);
     % normalize to [0,1]
-    v =((v-minVec)./difVec);
+    for j=1:vec_dim %check division by 0
+        if (difVec(j)~=0)
+            v(j) =((v(j)-minVec(j))./difVec(j));
+        end
     featureVector(vec_num,:)=v;
 end
 
