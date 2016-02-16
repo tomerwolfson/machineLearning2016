@@ -1,64 +1,25 @@
 clc;
 clear all;
 close all;
+%% Load negative and positive examples from test set
 tic;
 
 %negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\neg\');
 %posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\pos\');
-negfiles = getAllFiles('test200\neg\');
-posfiles = getAllFiles('test200\pos\');
+negfiles = getAllFiles('test_sets\test200\neg\');
+posfiles = getAllFiles('test_sets\test200\pos\');
 labels = [zeros(size(negfiles,1),1); ones(size(posfiles,1),1)];
 
 allfiles = [negfiles;posfiles];
-review_array ={};
-review_score ={};
-
-% go over all the review files,
-% extract each review string and store it
-for i = 1:size(allfiles,1)
-    disp(sprintf('Processing review %d out of %d', i, size(allfiles,1)));
-    myfile = allfiles{i};
-    
-    score=strsplit(myfile,'\');%score of review
-    score=score(size(score,2));
-    score=score{1};
-    score=score(size(score,2)-4);
-    score=str2num(score);
-    if (score==4 || score==7)
-        score=1;
-    elseif (score==3 || score==8)
-        score=2;
-    elseif (score==2 || score==9)
-        score=3;
-    else
-        score=4;
-    end
-     
-    fid = fopen( myfile);
-    s = textscan(fid,'%s','Delimiter','\n');
-    mystr = '';
-    for mycellindex = 1:size(s{1,1},1)
-        mystr = strcat(mystr, s{1,1}{mycellindex});
-    end
-    fclose(fid);
-    review_array{end+1} = mystr;
-    review_score{end+1}=score;
-end
-review_array = review_array';
-review_score = review_score';
-
-% Convert the textual review into a feature vector.
+[review_array, review_score] = read_files_contents_and_scores( allfiles );
+%% Convert the textual review into a feature vector (and locally save the feature vectors)
 % We select a specific 'bag of words' as the features.
 % These features will be the coordinates in the vector representation of
 % the review
-
-
 featureVector = featurize_bigram(review_array, review_score, 1, 1);%%%%%%
+save('featureVectorn70.mat','featureVector') %save vectors matrix
 featureVectorOrig = featureVector;
-save('featureVectorn70.dump','featureVector') %save vectors matrix
-
-% Perform 10 fold cross validation with Naive Bayes on the vectors
-% using Matlab implementation
+%% Perform 10 fold cross validation with Naive Bayes on the vectors using Matlab implementation
 disp('Naive Bayes - Multinomial');
 Fresults = [];
 
@@ -66,52 +27,62 @@ dataset_size = size(review_array, 1);
 test_size = floor(dataset_size/10);
 dataset_size = test_size * 10; %round down dataset size
 
+% 10-fold cross validation
 for i = 1:10
+    % choose training and test indices for current fold
     randomindices = randperm(dataset_size);
     randomindices = randomindices(1:(dataset_size-test_size));
+    trainingsetindex = randomindices;
     otherindices = (1:dataset_size)';
-    testsetindex = setdiff(otherindices,randomindices)';
-    trainingsetindex = randomindices ;
+    testsetindex = setdiff(otherindices,trainingsetindex)';
+    % choose training set using the above training indices
     trainingset = featureVector(trainingsetindex,:);
     traininglabel = labels(trainingsetindex,:);
-    
+    % choose test set using the above training indices
     testset = featureVector(testsetindex,:);
     testlabel = labels(testsetindex,:);
+    % Learn probability distributions from training set using Naive Bayes assumption
     O1 = NaiveBayes.fit(trainingset,traininglabel,'dist','mn'); % or  'mvmn'
+    % Predict labels using the learned model
     C2 = O1.predict(testset);
-    error = sum(xor(C2, testlabel));
-    accuracy = 1 - error/test_size;
-    Fresults = [Fresults,accuracy];
+    % calculate performance and store results
+    num_errors = sum(xor(C2, testlabel));
+    accuracy = 1 - num_errors/test_size;
+    fprintf('Accuracy for Naive Bayes classifier (fold %d) = %0.5f\n', i,accuracy)
+    Fresults = [Fresults, accuracy];
 end
 fprintf('Accuracy for Naive Bayes classifier = %0.5f\n', mean(Fresults))
-
-% Normalizing review vectors to range [0,1]
+%% Normalizing review vectors to range [0,1]
 vec_size=size(featureVector);
 vec_count=vec_size(1);
 vec_dim=vec_size(2);
-% get max and min
+% get maximal and minimal values for each element in the feature vector
+% (accross all the examples)
 maxVec = max(featureVector(:,:));
 minVec = min(featureVector(:,:));
 difVec=maxVec-minVec;
-for vec_num = 1:vec_count;%normalize reviews_vectors
-    v=featureVector(vec_num,:);
+% normalize reviews_vectors
+for vec_num = 1:vec_count;
+    v = featureVector(vec_num,:);
     % normalize to [0,1]
-    for j=1:vec_dim %check division by 0
-        if (difVec(j)~=0)
-            v(j) =((v(j)-minVec(j))./difVec(j));
+    for j = 1:vec_dim %check division by 0
+        if (difVec(j) ~= 0)
+            v(j) = ((v(j)-minVec(j))./difVec(j));
         end
     end
-    featureVector(vec_num,:)=v;
+    featureVector(vec_num,:) = v;
 end
 
-% Perform 10 fold cross validation with SVM on the vectors
-% using LibSVM implementation
+%% Perform 10 fold cross validation with SVM on the vectors using LibSVM implementation
 disp('SVM - Polynomial Kernel');
 Fresults = [];
-d=1;
-c = power(2,5);
+k = 1; % kernel type (0 -- linear, 1 -- polynomial, 2 -- radial basis function
+          %                      3 -- sigmoid, 4 -- precomputed kernel)
+d = 1; % polynomial degree
+c = power(2,5); % soft svm regularization parameter
+n = 1; % Number of cross validation folds
 
-param = sprintf('-t %d -d %d -c %d -q',1,d,c);
+param = sprintf('-t %d -d %d -c %d -q',k,d,c);
 
 dataset_size = size(review_array, 1);
 test_size = floor(dataset_size/10);
@@ -135,9 +106,7 @@ for i = 1:10
     accuracy = accuracy(1)/100;
     Fresults = [Fresults,accuracy];
 end
-
 fprintf('Accuracy for SVM classifier = %0.5f\n', mean(Fresults))
-
 
 toc;
 
