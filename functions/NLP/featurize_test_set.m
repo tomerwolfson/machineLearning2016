@@ -13,14 +13,10 @@ function featureVector = featurize_test_set(inputcellarray, nminFeatures, remove
 % Outputs:
 %       featureVector
 
-
-
- 
 headers = classifier_features;
 
 % Iterate over all the reviews and create their vector represenataion,
 % the vector coordinates are the features unigrams and bigrams
-
 outputMatrix = zeros(size(inputcellarray,1),size(headers, 2));
 for i = 1:size(inputcellarray,1)
     fprintf('Vectorize %d/%d ', i, size(inputcellarray,1));
@@ -48,7 +44,6 @@ for i = 1:size(inputcellarray,1)
     end
       
 end
-
 featureVector = outputMatrix;
 
 end
