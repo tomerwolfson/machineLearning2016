@@ -10,7 +10,7 @@ if ~isfield(params, 'beta')
     params.beta = 0.25;
 end
 
-addpath('~/matlib/liblinear-1.8/matlab/');
+%addpath('~/matlib/liblinear-1.8/matlab/');
 
 cwpos = zeros(params.dictsize, 1);
 cwneg = zeros(params.dictsize, 1);
