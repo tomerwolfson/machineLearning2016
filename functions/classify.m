@@ -3,7 +3,6 @@ clear all;
 close all;
 %% Load negative and positive examples from test set
 tic;
-
 %negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\neg\');
 %posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test2000\pos\');
 negfiles = getAllFiles('test_sets\test200\neg\');
@@ -16,7 +15,9 @@ allfiles = [negfiles;posfiles];
 % We select a specific 'bag of words' as the features.
 % These features will be the coordinates in the vector representation of
 % the review
-featureVector = featurize_bigram(review_array, review_score, 1, 1);%%%%%%
+[featureVector,selectedheaderskeys] = featurize_bigram(review_array, 1, 1);
+featureVector = weight_features_by_score(featureVector, review_score);
+% review_score
 save('featureVectorn70.mat','featureVector') %save vectors matrix
 featureVectorOrig = featureVector;
 %% Perform 10 fold cross validation with Naive Bayes on the vectors using Matlab implementation
