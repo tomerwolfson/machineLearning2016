@@ -1,4 +1,4 @@
-function output = term_count(inputtext,score,headers)
+function output = term_count(inputtext,headers)
 % Multinomial Featurizer
 %
 % takes:
@@ -11,7 +11,7 @@ output = [];
     for i= 1:size(headers,2)
         pattern = headers{i};
         temp = regexp(inputtext, pattern, 'match');   
-        output = [output, size(temp,2)*score];
+        output = [output, size(temp,2)];
     end
 
 end
