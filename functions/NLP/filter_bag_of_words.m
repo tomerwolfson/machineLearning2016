@@ -14,7 +14,7 @@ j = 0;
 wordkeys = keys(unigram_corpus);
 for i=1:size(wordkeys,2)
     app_prec=unigram_corpus(wordkeys{i})/map_sizes(1);
-    if (app_prec>=params.word_corpus_thresh)
+    if (app_prec>=params.unigram_corpus_thresh)
         j = j + 1;
         selectedheaders(wordkeys{i})=1;
     end
@@ -28,7 +28,7 @@ j = 0;
 wordkeys = keys(unigram_non_corpus);
 for i=1:size(wordkeys,2)
     app_prec=unigram_non_corpus(wordkeys{i})/map_sizes(2);
-    if (app_prec>=params.word_not_corpus_thresh)
+    if (app_prec>=params.unigram_not_corpus_thresh)
         j = j + 1;
         selectedheaders(wordkeys{i})=1;
     end
