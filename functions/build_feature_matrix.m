@@ -5,11 +5,14 @@ addpath(genpath('.'));
 %% Load pre-calculated full bag of words
 train_set_name = 'train23000';
 bow_name = ['trained_models\',train_set_name,'_bow_full_stem_stop'];
-mkdir(['trained_models\',train_set_name,'_bow_full_stem_stop']);
-load_map([bow_name,'\unigram_corpus.mat'],unigram_corpus);
-load_map([bow_name,'\unigram_non_corpus.mat'],unigram_non_corpus);
-load_map([bow_name,'\bigram_corpus.mat'],bigram_corpus);
-load_map([bow_name,'\bigram_non_corpus.mat'],bigram_non_corpus);
+unigram_corpus = load_map([bow_name,'\unigram_corpus.mat']);
+unigram_non_corpus = load_map([bow_name,'\unigram_non_corpus.mat']);
+bigram_corpus = load_map([bow_name,'\bigram_corpus.mat']);
+bigram_non_corpus = load_map([bow_name,'\bigram_non_corpus.mat']);
+map_sizes = [length(keys(unigram_corpus)), ...
+             length(keys(unigram_non_corpus)), ...
+             length(keys(bigram_corpus)), ...
+             length(keys(bigram_non_corpus))];
 %% filter bag of words of size 4732
 params.unigram_corpus_thresh = 0;     % 3719
 params.unigram_not_corpus_thresh = 1; % 0
