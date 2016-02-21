@@ -28,7 +28,7 @@ bigram_non_corpus = containers.Map();
 % Size of each map (dictionary)
 map_sizes=zeros(1,4); % sizes of each of the maps above by order
 
-fprintf('Calculating bag of words. Total parsed (out of %d):\n', size(inputcellarray,1));
+fprintf('Calculating full bag of words. Total parsed (out of %d):\n', size(inputcellarray,1));
 for i = 1:size(inputcellarray,1)
     if (mod(i,25) == 0) || (i == size(inputcellarray,1))
         fprintf('%d ',i);
