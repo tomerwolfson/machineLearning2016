@@ -1,5 +1,6 @@
 addpath('~/matlib/liblinear-1.8/matlab/');
 %%
+addpath('../../SVM/liblinear-2.1/matlab/');
 params.C = 1;
 params.samplenum = 1;
 params.samplerate = 1;

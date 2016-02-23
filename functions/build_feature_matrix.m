@@ -28,7 +28,7 @@ save_features(filename,featureVector);
 %% filter bag of words of size 10187
 params.unigram_corpus_thresh = 0;     % 3719
 params.unigram_not_corpus_thresh = 1; % 0
-params.bigram_corpus_thresh = 0.00002; % 6468
+params.bigram_corpus_thresh = 0.00008; % 6468
 params.bigram_not_corpus_thresh = 1;  % 0
 filtered_bag_of_words = filter_bag_of_words(unigram_corpus,...
     unigram_non_corpus,bigram_corpus,bigram_non_corpus,map_sizes,params);
@@ -40,7 +40,7 @@ save_features(filename,featureVector);
 %% filter bag of words of size 20464
 params.unigram_corpus_thresh = 0;     % 3719
 params.unigram_not_corpus_thresh = 1; % 0
-params.bigram_corpus_thresh = 0.000008; % 16745
+params.bigram_corpus_thresh = 0.00003; % 16745
 params.bigram_not_corpus_thresh = 1;  % 0
 filtered_bag_of_words = filter_bag_of_words(unigram_corpus,...
     unigram_non_corpus,bigram_corpus,bigram_non_corpus,map_sizes,params);
