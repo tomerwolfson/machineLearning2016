@@ -23,17 +23,15 @@ review_array_test = read_files_contents( files );
 % We select a specific 'bag of words' as the features.
 % These features will be the coordinates in the vector representation of
 % the review.
-load('trained_models\all_filtered_bow_V26293.mat'); % Loads: filtered_bag_of_words
-featureVector_test = featurize_bigram(filtered_bag_of_words,review_array_test, 1, 1);   
+load('trained_models\all_filtered_bow_V322908.mat'); % Loads: filtered_bag_of_words
+allSNumBi_test = featurize_bigram_nbsvm(filtered_bag_of_words,review_array_test, 1, 1); % featureVector (matrix)
 
 %% Run test function and print results
-% labels = zeros(length(review_array_test),1);
-labels = [zeros(length(review_array_test)/2,1); ones(length(review_array_test)/2,1)];
+labels = [zeros(length(review_array_test)/2,1); ones(length(review_array_test)/2,1)]; % dummy labels
 labels_nbsvm_test = labels2nbsvm_format(labels);
-allSNumBi_test = features2nbsvm_format(featureVector_test);
 
 % (2) load trained model
-load('trained_models\trained_models\nbsvm_models\nbsvm_V26293.mat');
+load('trained_models\nbsvm_models\nbsvm_V322908.mat');
 params.C = 1;
 params.samplenum = 1;
 params.samplerate = 1;
@@ -44,21 +42,10 @@ params.a = 1;
 params.beta = 0.25;
 params.CVNUM = 1;
 params.doCV = 0;
+params.dictsize = length(filtered_bag_of_words);
 
 % (3) classify 
-[acc predicted_labels softpred] = testfuncp(model, allSNumBi_test, labels_nbsvm_test, params);
-% TODO: remove all until acc (including)
-nblbltst = labels_nbsvm_test;
-fp = sum(nblbltst == 0 & pred == 1);
-fn = sum(nblbltst == 1 & pred == 0);
-tp = sum(nblbltst == 1 & pred == 1);
-tn = sum(nblbltst == 0 & pred == 0);
-fprintf('true positives: %d\n',tp);
-fprintf('true negatives: %d\n',tn);
-fprintf('False positives: %d\n',fp);
-fprintf('False negatives: %d\n',fn);
-%fprintf('Accuracy: %f\n',acc);
-acc
+[acc predicted_labels softpred] = testMNBSVM(model, allSNumBi_test, labels_nbsvm_test, params);
 
 % Save the predicted labels as a text file predicted.txt
 fid = fopen('predicted.txt','wt');
@@ -67,4 +54,18 @@ for i = 1:length(files)
     fprintf(fid,'%s\t\t%d\n',[name,ext],predicted_labels(i));
 end
 fclose(fid);
+%% TODO: remove all until acc (including)
+nblbltst = labels_nbsvm_test;
+fp = sum(nblbltst == 0 & predicted_labels == 1);
+fn = sum(nblbltst == 1 & predicted_labels == 0);
+tp = sum(nblbltst == 1 & predicted_labels == 1);
+tn = sum(nblbltst == 0 & predicted_labels == 0);
+fprintf('true positives: %d\n',tp);
+fprintf('true negatives: %d\n',tn);
+fprintf('False positives: %d\n',fp);
+fprintf('False negatives: %d\n',fn);
+%fprintf('Accuracy: %f\n',acc);
+acc
+
+
 end
