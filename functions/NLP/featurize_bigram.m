@@ -30,7 +30,7 @@ function [featureVector] = featurize_bigram( ...
 
 % Iterate over all the reviews and create their vector represenataion,
 % the vector coordinates are the features unigrams and bigrams
-outputMatrix = zeros(size(inputcellarray,1),length(bag_of_words));
+outputMatrix = sparse(size(inputcellarray,1),length(bag_of_words));
 
 % Create bag-of-words order (for the feature vector)
 bow2ind = containers.Map(bag_of_words,1:length(bag_of_words));% bag of words to index

@@ -7,7 +7,7 @@ function [ term_count ] = term_count_efficient( review,bow2ind,bow2ind_size )
 %               index.
 % output:
 %      an array of numbers showing how many times each term is repeated in the text
-term_count = zeros(1,bow2ind_size);
+term_count = sparse(1,bow2ind_size);
 terms = strsplit(review,' '); % splits the review to a cell array of terms
 prev_term = '';
 for i = 1:length(terms)
