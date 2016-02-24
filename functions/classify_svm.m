@@ -5,8 +5,8 @@ addpath(genpath('.'));
 %% Load negative and positive examples from train set
 tic;
 train_set_name = 'svm25k';
-posfiles = getAllFiles(['D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\dataset_imdb\test\pos\']);
-negfiles = getAllFiles(['D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\dataset_imdb\test\neg\']);
+posfiles = getAllFiles(['D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\pos\']);
+negfiles = getAllFiles(['D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\dataset\neg\']);
 % posfiles = getAllFiles(['test_sets\',train_set_name,'\pos\']);
 % negfiles = getAllFiles(['test_sets\',train_set_name,'\neg\']);
 labels = [ones(size(posfiles,1),1); zeros(size(negfiles,1),1)];
@@ -30,23 +30,24 @@ save_map([bow_name,'\bigram_non_corpus.mat'],bigram_non_corpus);
 fprintf('time for building full bag of words: %f\n', toc);
 %% filter bag of words using thresholds for each kind of term
 tic;
-% % Original thresholds
-% params.unigram_corpus_thresh = 0.0001; % 0.0001
-% params.unigram_not_corpus_thresh = 0.05; % 0.05
-% params.bigram_corpus_thresh = 0.001; % 0.0001
-% params.bigram_not_corpus_thresh = 0.05; % 0.05
+% Original thresholds
+params.unigram_corpus_thresh = 0.0001; % 0.0001
+params.unigram_not_corpus_thresh = 0.05; % 0.05
+params.bigram_corpus_thresh = 0.001; % 0.0001
+params.bigram_not_corpus_thresh = 0.05; % 0.05
 
-% % 26293
+% % about 26293 features
 % params.unigram_corpus_thresh = 0;
 % params.unigram_not_corpus_thresh = 0.00001;
 % params.bigram_corpus_thresh = 0.00001;
 % params.bigram_not_corpus_thresh = 0.00005;
 
-% % about 322908
-params.unigram_corpus_thresh = 0;
-params.unigram_not_corpus_thresh = 1;
-params.bigram_corpus_thresh = 0;
-params.bigram_not_corpus_thresh = 1;
+% % about 322908 features
+% params.unigram_corpus_thresh = 0;
+% params.unigram_not_corpus_thresh = 1;
+% params.bigram_corpus_thresh = 0;
+% params.bigram_not_corpus_thresh = 1;
+
 filtered_bag_of_words = filter_bag_of_words(unigram_corpus,...
     unigram_non_corpus,bigram_corpus,bigram_non_corpus,map_sizes,params);
 fprintf('time for filtering bag of words: %f\n', toc);
@@ -69,8 +70,28 @@ tic;
 traininglabel = labels;
 trainingset = featureVector;
 
-% Standardize the train  matrix for the SVM model
-%%%%%%%TODO!!!
+% % Normalizing review vectors to range [0,1]
+% vec_size=size(featureVector);
+% vec_count=vec_size(1);
+% vec_dim=vec_size(2);
+% % get maximal and minimal values for each element in the feature vector
+% % (accross all the examples)
+% maxVec = max(featureVector(:,:));
+% minVec = min(featureVector(:,:));
+% difVec=maxVec-minVec;
+% % normalize reviews_vectors
+% for vec_num = 1:vec_count;
+%     v = featureVector(vec_num,:);
+%     % normalize to [0,1]
+%     for j = 1:vec_dim %check division by 0
+%         if (difVec(j) ~= 0)
+%             v(j) = ((v(j)-minVec(j))./difVec(j));
+%         else
+%            v(j)=0; 
+%         end
+%     end
+%     featureVector(vec_num,:) = v;
+% end
 
 % model parameters
 d = 1;
@@ -83,49 +104,70 @@ save(sprintf('trained_models\\svm_models\\svm_V%d.mat',length(filtered_bag_of_wo
 fprintf('time for training model: %f\n', toc);
 
 
-%% Test the SVM model [Optional]
-tic;
-negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test200_cornell\neg\');
-posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test200_cornell\pos\');
-test_labels = [zeros(size(negfiles,1),1); ones(size(posfiles,1),1)];
-testfiles = [negfiles;posfiles];
-test_array ={};
-
-% go over all the review files,
-% extract each review string and store it
-for i = 1:size(testfiles,1)
-    if(~mod(i,100))
-        disp(sprintf('Processing test review %d out of %d', i, size(testfiles,1)));
-    end
-    myfile = testfiles{i};
-    fid = fopen( myfile);
-    s = textscan(fid,'%s','Delimiter','\n');
-    mystr = '';
-    for mycellindex = 1:size(s{1,1},1)
-        mystr = strcat(mystr, s{1,1}{mycellindex});
-    end
-    fclose(fid);
-    test_array{end+1} = mystr;
-end
-test_array = test_array';
-
-% Perform classification:
-% (1) Convert the textual review into a feature vector.
-% We select a specific 'bag of words' as the features.
-% These features will be the coordinates in the vector representation of
-% the review.
-train_features=importdata('.\trained_models\chosen_features_svm25k.mat');
-testVector = featurize_test_set(train_features, test_array, 1, 1);
-% Standardize the test matrix
-%%%%%%%TODO!!!
-
-% (2) load trained model
-SVMSModel=importdata('.\trained_models\svm_models\SVM_classifier25k.mat');
-
-% (3) classify
-testlabel = randi(2,size(testVector,1),1) - 1; % random dummy labels for svmpredict
-[Group, accuracy, ~] = svmpredict(testlabel,testset,SVMSModel,'-q');
-% (4) compute the accuracy
-accuracy_SVM = accuracy(1)/100
-
-fprintf('time for testing model: %f\n', toc);
+% %% Test the SVM model [Optional]
+% tic;
+% negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test200_cornell\neg\');
+% posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test200_cornell\pos\');
+% test_labels = [zeros(size(negfiles,1),1); ones(size(posfiles,1),1)];
+% testfiles = [negfiles;posfiles];
+% test_array ={};
+% 
+% % go over all the review files,
+% % extract each review string and store it
+% for i = 1:size(testfiles,1)
+%     if(~mod(i,100))
+%         disp(sprintf('Processing test review %d out of %d', i, size(testfiles,1)));
+%     end
+%     myfile = testfiles{i};
+%     fid = fopen( myfile);
+%     s = textscan(fid,'%s','Delimiter','\n');
+%     mystr = '';
+%     for mycellindex = 1:size(s{1,1},1)
+%         mystr = strcat(mystr, s{1,1}{mycellindex});
+%     end
+%     fclose(fid);
+%     test_array{end+1} = mystr;
+% end
+% test_array = test_array';
+% 
+% % Perform classification:
+% % (1) Convert the textual review into a feature vector.
+% % We select a specific 'bag of words' as the features.
+% % These features will be the coordinates in the vector representation of
+% % the review.
+% train_features=importdata('.\trained_models\svm25k_filtered_bow_V1145.mat');
+% testVector = featurize_test_set(train_features, test_array, 1, 1);
+% 
+% % % Normalizing review vectors to range [0,1]
+% % vec_size=size(testVector);
+% % vec_count=vec_size(1);
+% % vec_dim=vec_size(2);
+% % % get maximal and minimal values for each element in the feature vector
+% % % (accross all the examples)
+% % maxVec = max(testVector(:,:));
+% % minVec = min(testVector(:,:));
+% % difVec=maxVec-minVec;
+% % % normalize reviews_vectors
+% % for vec_num = 1:vec_count;
+% %     v = testVector(vec_num,:);
+% %     % normalize to [0,1]
+% %     for j = 1:vec_dim %check division by 0
+% %         if (difVec(j) ~= 0)
+% %             v(j) = ((v(j)-minVec(j))./difVec(j));
+% %         else
+% %            v(j)=0; 
+% %         end
+% %     end
+% %     testVector(vec_num,:) = v;
+% % end
+% 
+% 
+% % (2) load trained model
+% SVMSModel=importdata('.\trained_models\svm_models\svm_V1145.mat');
+% 
+% % (3) classify
+% [Group, accuracy, ~] = svmpredict(test_labels,testVector,SVMSModel,'-q');
+% % (4) compute the accuracy
+% accuracy_SVM = accuracy(1)/100
+% 
+% fprintf('time for testing model: %f\n', toc);

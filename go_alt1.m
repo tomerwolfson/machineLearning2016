@@ -29,9 +29,30 @@ end
 % the review.
 train_features=importdata('.\trained_models\chosen_features_svm25k.mat');
 testVector = featurize_test_set(train_features, test_array, 1, 1);
-% Standardize the test matrix
-%%%%%%%TODO!!!
 
+%% Normalizing review vectors to range [0,1]
+% vec_size=size(testVector);
+% vec_count=vec_size(1);
+% vec_dim=vec_size(2);
+% % get maximal and minimal values for each element in the feature vector
+% % (accross all the examples)
+% maxVec = max(testVector(:,:));
+% minVec = min(testVector(:,:));
+% difVec=maxVec-minVec;
+% % normalize reviews_vectors
+% for vec_num = 1:vec_count;
+%     v = testVector(vec_num,:);
+%     % normalize to [0,1]
+%     for j = 1:vec_dim %check division by 0
+%         if (difVec(j) ~= 0)
+%             v(j) = ((v(j)-minVec(j))./difVec(j));
+%         else
+%            v(j)=0; 
+%         end
+%     end
+%     testVector(vec_num,:) = v;
+% end
+%%
 % (2) load trained model
 SVMSModel=importdata('.\trained_models\svm_models\SVM_classifier25k.mat');
 
