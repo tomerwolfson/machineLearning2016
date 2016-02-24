@@ -28,10 +28,12 @@ end
 % These features will be the coordinates in the vector representation of
 % the review.
 train_features=importdata('.\trained_models\chosen_features_svm25k.mat');
-testVector = featurize_test_set(test_array, 1, 1, train_features);
+testVector = featurize_test_set(train_features, test_array, 1, 1);
+% Standardize the test matrix
+%%%%%%%TODO!!!
 
 % (2) load trained model
-SVMSModel=importdata('.\trained_models\SVM_classifier25k.mat');
+SVMSModel=importdata('.\trained_models\svm_models\SVM_classifier25k.mat');
 
 % (3) classify
 testlabel = randi(2,size(testVector,1),1) - 1; % random dummy labels for svmpredict

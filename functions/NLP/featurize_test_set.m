@@ -1,4 +1,4 @@
-function featureVector = featurize_test_set(inputcellarray, removeStopWords, doStem, classifier_features)
+function featureVector = featurize_test_set(classifier_features, inputcellarray, removeStopWords, doStem)
 
 % Receives an array of textual review as the test datase, and an array of features
 % chosen by the classifier. The reviews in the araray are converted to vectors according to the classifiers features.
@@ -16,10 +16,7 @@ function featureVector = featurize_test_set(inputcellarray, removeStopWords, doS
 headers = classifier_features;
 
 % Perform initial parsing of review strings:
-% convert all strings to lowercase
-fprintf('>> Parsing reviews - converting to lowercase...\n');
-inputcellarray = cellfun(@(x) lower(x), inputcellarray, 'UniformOutput', false);
-% remove non-character symbols from text
+% remove non-character symbols from text and convert to lowercase
 fprintf('>> Parsing reviews - removing non-char symbols...\n');
 inputcellarray = cellfun(@(x) parse_review_string(x), inputcellarray, 'UniformOutput', false);
 % inputcellarray now contains parsed review strings

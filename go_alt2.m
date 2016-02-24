@@ -27,11 +27,11 @@ end
 % We select a specific 'bag of words' as the features.
 % These features will be the coordinates in the vector representation of
 % the review.
-train_features=importdata('.\trained_models\chosen_features_nb25k.mat');
-testVector = featurize_test_set(test_array, 1, 1, train_features);
+train_features=importdata('.\trained_models\test2000_filtered_bow_V52969.mat');
+testVector = featurize_test_set(train_features, test_array, 1, 1);
 
 % (2) load trained model
-NBModel=importdata('.\trained_models\NB_classifier25k.mat');
+NBModel=importdata('.\trained_models\nb_models\nb_V52969.mat');
 
 % (3) classify
 predicted_labels = NBModel.predict(testVector);
@@ -45,4 +45,5 @@ for i = 1:length(files)
     fprintf(fid,'%s%s \t%d\n',name,repmat(' ',1,maxl),predicted_labels(i));
 end
 fclose(fid);
+
 end
