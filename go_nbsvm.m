@@ -48,10 +48,19 @@ params.dictsize = length(filtered_bag_of_words);
 [acc predicted_labels softpred] = testMNBSVM(model, allSNumBi_test, labels_nbsvm_test, params);
 
 % Save the predicted labels as a text file predicted.txt
-fid = fopen('predicted.txt','wt');
+files_names=cell(length(files),1);
 for i = 1:length(files)
     [~,name,ext] = fileparts(files{i});
-    fprintf(fid,'%s\t\t%d\n',[name,ext],predicted_labels(i));
+    strname=strcat(name,ext);
+    files_names{i}=strname;
+end
+len=cellfun(@numel,files_names);
+maxLen=max(len);
+len=maxLen-len;
+
+fid = fopen('predicted.txt','wt');
+for i = 1:length(files)
+    fprintf(fid,'%s%s \t%d\n',files_names{i},repmat(' ',1,len(i)),predicted_labels(i));
 end
 fclose(fid);
 
