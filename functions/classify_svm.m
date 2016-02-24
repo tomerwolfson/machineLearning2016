@@ -33,7 +33,7 @@ tic;
 % Original thresholds
 params.unigram_corpus_thresh = 0.0001; % 0.0001
 params.unigram_not_corpus_thresh = 0.05; % 0.05
-params.bigram_corpus_thresh = 0.001; % 0.0001
+params.bigram_corpus_thresh = 0.0001; % 0.0001
 params.bigram_not_corpus_thresh = 0.05; % 0.05
 
 % % about 26293 features
@@ -106,8 +106,8 @@ fprintf('time for training model: %f\n', toc);
 
 % %% Test the SVM model [Optional]
 % tic;
-% negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test200_cornell\neg\');
-% posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\code\test200_cornell\pos\');
+% negfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\dataset_imdb\test\neg\');
+% posfiles = getAllFiles('D:\D\Tomer\Tomer Files\Tel Aviv University\Course_Machine_Learning\project\dataset_imdb\test\pos\');
 % test_labels = [zeros(size(negfiles,1),1); ones(size(posfiles,1),1)];
 % testfiles = [negfiles;posfiles];
 % test_array ={};
@@ -135,7 +135,7 @@ fprintf('time for training model: %f\n', toc);
 % % We select a specific 'bag of words' as the features.
 % % These features will be the coordinates in the vector representation of
 % % the review.
-% train_features=importdata('.\trained_models\svm25k_filtered_bow_V1145.mat');
+% train_features=importdata('.\trained_models\svm25k_filtered_bow_V1216.mat');
 % testVector = featurize_test_set(train_features, test_array, 1, 1);
 % 
 % % % Normalizing review vectors to range [0,1]
@@ -163,7 +163,7 @@ fprintf('time for training model: %f\n', toc);
 % 
 % 
 % % (2) load trained model
-% SVMSModel=importdata('.\trained_models\svm_models\svm_V1145.mat');
+% SVMSModel=importdata('.\trained_models\svm_models\svm_V1216.mat');
 % 
 % % (3) classify
 % [Group, accuracy, ~] = svmpredict(test_labels,testVector,SVMSModel,'-q');
