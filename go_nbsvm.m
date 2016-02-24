@@ -27,7 +27,7 @@ load('trained_models\all_filtered_bow_V322908.mat'); % Loads: filtered_bag_of_wo
 allSNumBi_test = featurize_bigram_nbsvm(filtered_bag_of_words,review_array_test, 1, 1); % featureVector (matrix)
 
 %% Run test function and print results
-labels = [zeros(length(review_array_test)/2,1); ones(length(review_array_test)/2,1)]; % dummy labels
+labels = zeros(length(review_array_test),1); % dummy labels
 labels_nbsvm_test = labels2nbsvm_format(labels);
 
 % (2) load trained model
@@ -54,18 +54,5 @@ for i = 1:length(files)
     fprintf(fid,'%s\t\t%d\n',[name,ext],predicted_labels(i));
 end
 fclose(fid);
-%% TODO: remove all until acc (including)
-nblbltst = labels_nbsvm_test;
-fp = sum(nblbltst == 0 & predicted_labels == 1);
-fn = sum(nblbltst == 1 & predicted_labels == 0);
-tp = sum(nblbltst == 1 & predicted_labels == 1);
-tn = sum(nblbltst == 0 & predicted_labels == 0);
-fprintf('true positives: %d\n',tp);
-fprintf('true negatives: %d\n',tn);
-fprintf('False positives: %d\n',fp);
-fprintf('False negatives: %d\n',fn);
-%fprintf('Accuracy: %f\n',acc);
-acc
-
 
 end
