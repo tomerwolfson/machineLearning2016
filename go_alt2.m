@@ -47,7 +47,7 @@ len=cellfun(@numel,files_names);
 maxLen=max(len);
 len=maxLen-len;
 
-fid = fopen('predicted_SVM.txt','wt');
+fid = fopen('predicted.txt','wt');
 for i = 1:length(files)
     fprintf(fid,'%s%s \t%d\n',files_names{i},repmat(' ',1,len(i)),predicted_labels(i));
 end
