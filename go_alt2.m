@@ -37,12 +37,19 @@ NBModel=importdata('.\trained_models\nb_models\nb_V52969.mat');
 predicted_labels = NBModel.predict(testVector);
 
 % Save the predicted labels as a text file predicted.txt
-fid = fopen('predicted_NB.txt','wt');
+files_names=cell(length(files),1);
 for i = 1:length(files)
     [~,name,ext] = fileparts(files{i});
-    name=strcat(name,ext);
-    maxl=10-length(name);%to check if there is a better way!!!
-    fprintf(fid,'%s%s \t%d\n',name,repmat(' ',1,maxl),predicted_labels(i));
+    strname=strcat(name,ext);
+    files_names{i}=strname;
+end
+len=cellfun(@numel,files_names);
+maxLen=max(len);
+len=maxLen-len;
+
+fid = fopen('predicted_SVM.txt','wt');
+for i = 1:length(files)
+    fprintf(fid,'%s%s \t%d\n',files_names{i},repmat(' ',1,len(i)),predicted_labels(i));
 end
 fclose(fid);
 
