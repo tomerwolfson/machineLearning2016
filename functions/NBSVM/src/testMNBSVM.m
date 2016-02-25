@@ -10,6 +10,6 @@ for i = 1:length(X)
     vecstest(updates,i) = counts .* model.rawvecs(updates);
 end
 
-[pred, acc, softpred] = predict(double(labels'), vecstest', model);
+[pred, acc, softpred] = predict(double(labels'), vecstest', model,'-q');
 pred = pred';
 softpred = softpred';
